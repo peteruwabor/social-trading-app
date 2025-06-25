@@ -253,8 +253,8 @@ export class TradeCaptureService {
     }
 
     const totalTrades = trades.length;
-    const totalVolume = trades.reduce((sum, trade) => sum + Number(trade.quantity), 0);
-    const totalValue = trades.reduce((sum, trade) => sum + (Number(trade.quantity) * Number(trade.fillPrice)), 0);
+    const totalVolume = trades.reduce((sum: number, trade: any) => sum + Number(trade.quantity), 0);
+    const totalValue = trades.reduce((sum: number, trade: any) => sum + (Number(trade.quantity) * Number(trade.fillPrice)), 0);
     const buyCount = trades.filter(trade => trade.side === 'BUY').length;
     const sellCount = trades.filter(trade => trade.side === 'SELL').length;
     const averageTradeSize = totalVolume / totalTrades;
@@ -358,8 +358,8 @@ export class TradeCaptureService {
     }
 
     const totalTrades = trades.length;
-    const totalVolume = trades.reduce((sum, trade) => sum + Number(trade.quantity), 0);
-    const totalValue = trades.reduce((sum, trade) => sum + (Number(trade.quantity) * Number(trade.fillPrice)), 0);
+    const totalVolume = trades.reduce((sum: number, trade: any) => sum + Number(trade.quantity), 0);
+    const totalValue = trades.reduce((sum: number, trade: any) => sum + (Number(trade.quantity) * Number(trade.fillPrice)), 0);
     const averagePrice = totalValue / totalVolume;
     const lastTrade = trades[0];
 
