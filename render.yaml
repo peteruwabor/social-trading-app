@@ -2,7 +2,7 @@ services:
   - type: web
     name: gioat-platform
     env: node
-    buildCommand: npm install -g pnpm && cd packages/api && pnpm install && npx prisma generate && npm run build
+    buildCommand: cd packages/api && npm install && npx prisma generate && npm run build
     startCommand: cd packages/api && npm start
     healthCheckPath: /health
     envVars:
