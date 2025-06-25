@@ -1,6 +1,7 @@
-Dockerfile.prod
-docker-compose.prod.yml
+Dockerfile*
+docker-compose*
 nginx/
 monitoring/
 scripts/
-security/ 
+security/
+*.dockerfile 
