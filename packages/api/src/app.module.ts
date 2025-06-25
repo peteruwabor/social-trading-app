@@ -13,9 +13,7 @@ import { TradeCaptureModule } from './trade-capture/trade-capture.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { FollowerModule } from './modules/followers/follower.module';
 import { CopyTradingModule } from './modules/copy-trading/copy-trading.module';
-import { CopyEngineModule } from './modules/copy-engine/copy-engine.module';
 import { LiveSessionModule } from './modules/live-session/live-session.module';
-import { RealtimeModule } from './modules/realtime/realtime.module';
 
 // Temporarily comment out all other modules
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -42,9 +40,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     PortfolioModule,
     FollowerModule,
     CopyTradingModule,
-    CopyEngineModule,
     LiveSessionModule,
-    RealtimeModule,
     // Temporarily commented out
     // AnalyticsModule,
     // ApiKeyModule,

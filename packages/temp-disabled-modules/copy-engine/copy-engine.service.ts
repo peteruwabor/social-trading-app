@@ -241,7 +241,7 @@ export class CopyEngineService implements OnModuleInit {
     }
   }
 
-  public async executeCopyOrderWithQuantity(
+  private async executeCopyOrderWithQuantity(
     follower: any,
     leaderTrade: any,
     event: LeaderTradeFilledEvent,

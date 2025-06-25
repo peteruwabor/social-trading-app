@@ -96,7 +96,7 @@ export class DelayedCopyService implements OnModuleInit {
           followerId: follower.followerId,
           leaderId: follower.leaderId,
           symbol: trade.symbol,
-          side: trade.side as 'BUY' | 'SELL',
+          side: trade.side,
           quantity: quantity,
           originalTradeId: trade.id,
           scheduledFor: scheduledFor,
@@ -125,24 +125,23 @@ export class DelayedCopyService implements OnModuleInit {
             lte: new Date(),
           },
         },
+        include: {
+          originalTrade: true,
+        },
       });
 
       this.logger.log(`Found ${pendingOrders.length} pending delayed copy orders`);
 
       for (const order of pendingOrders) {
         try {
-          // Fetch the original trade manually
-          const originalTrade = await this.prisma.trade.findUnique({
-            where: { id: order.originalTradeId },
-          });
-          if (!originalTrade) throw new Error('Original trade not found');
-          await this.executeDelayedOrder({ ...order, originalTrade });
+          await this.executeDelayedOrder(order);
         } catch (error) {
           this.logger.error(`Error executing delayed order ${order.id}:`, error);
+          
           // Mark as failed
           await this.prisma.delayedCopyOrder.update({
             where: { id: order.id },
-            data: {
+            data: { 
               status: 'FAILED',
               errorMessage: error instanceof Error ? error.message : 'Unknown error',
             },
@@ -181,7 +180,7 @@ export class DelayedCopyService implements OnModuleInit {
           trade: {
             account_number: order.originalTrade.accountNumber,
             symbol: order.symbol,
-            side: order.side as 'BUY' | 'SELL',
+            side: order.side,
             quantity: order.quantity,
             fill_price: order.originalTrade.fillPrice,
             filled_at: order.originalTrade.filledAt.toISOString(),
@@ -261,12 +260,9 @@ export class DelayedCopyService implements OnModuleInit {
    * Get delayed copy orders for a follower
    */
   async getDelayedCopyOrders(followerId: string): Promise<DelayedCopyOrder[]> {
-    const orders = await this.prisma.delayedCopyOrder.findMany({
+    return this.prisma.delayedCopyOrder.findMany({
       where: { followerId: followerId },
       orderBy: { scheduledFor: 'desc' },
     });
-    
-    // Cast the result to fix the type mismatch
-    return orders as DelayedCopyOrder[];
   }
 } 

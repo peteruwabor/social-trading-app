@@ -418,7 +418,7 @@ export class TaxExportService {
           userId: userId,
           year: year,
           format: format,
-          summary: summary,
+          summary: JSON.parse(JSON.stringify(summary)),
         },
       });
     } catch (error) {

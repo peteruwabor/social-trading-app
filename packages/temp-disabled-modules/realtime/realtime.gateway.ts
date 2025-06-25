@@ -237,26 +237,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         return;
       }
 
-      // Find the social post for this session
-      const socialPost = await this.prisma.socialPost.findFirst({
-        where: {
-          type: 'LIVE_SESSION',
-          metadata: {
-            path: ['sessionId'],
-            equals: sessionId,
-          },
-        },
-      });
-
-      if (!socialPost) {
-        client.emit('error', { message: 'Session not found' });
-        return;
-      }
-
       // Save comment to database
       const comment = await this.prisma.comment.create({
         data: {
-          postId: socialPost.id, // Use postId instead of sessionId
+          sessionId,
           userId: client.userId,
           content: content.trim(),
         },
@@ -319,10 +303,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         });
       }
 
-      // Get updated comment and likes count
+      // Get updated comment with likes count
       const comment = await this.prisma.comment.findUnique({
         where: { id: commentId },
         include: {
+          likes: true,
           user: {
             select: { id: true, handle: true },
           },
@@ -330,30 +315,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       });
 
       if (comment) {
-        // Get likes count separately
-        const likesCount = await this.prisma.like.count({
-          where: { commentId },
+        // Broadcast like update
+        this.server.to(`session:${comment.sessionId}`).emit('comment_liked', {
+          commentId,
+          likesCount: comment.likes.length,
+          isLiked: !existingLike,
+          userId: client.userId,
+          timestamp: new Date().toISOString(),
         });
-
-        // Get the session ID from the post metadata
-        const socialPost = await this.prisma.socialPost.findUnique({
-          where: { id: comment.postId },
-        });
-
-        const sessionId = socialPost?.metadata && typeof socialPost.metadata === 'object' && 'sessionId' in socialPost.metadata 
-          ? socialPost.metadata.sessionId as string 
-          : null;
-
-        if (sessionId) {
-          // Broadcast like update
-          this.server.to(`session:${sessionId}`).emit('comment_liked', {
-            commentId,
-            likesCount,
-            isLiked: !existingLike,
-            userId: client.userId,
-            timestamp: new Date().toISOString(),
-          });
-        }
       }
 
     } catch (error) {

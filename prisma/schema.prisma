@@ -19,7 +19,7 @@ model User {
   mfaEnabled           Boolean                 @default(false)
   mfaSecret            String?
   status               String                  @default("ACTIVE")
-  kycStatus            String                  @default("PENDING")
+  kycStatus            KYCStatus               @default(PENDING)
   subscriptionTier     String                  @default("FREE")
   createdAt            DateTime                @default(now()) @map("created_at")
   updatedAt            DateTime                @updatedAt
@@ -103,13 +103,14 @@ model Trade {
   brokerConnectionId String           @map("broker_connection_id")
   accountNumber      String           @map("account_number")
   symbol             String
-  side               String
+  side               TradeSide
   quantity           Decimal
   fillPrice          Decimal          @map("fill_price")
   filledAt           DateTime         @map("filled_at")
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
   copyOrders         CopyOrder[]
+  delayedCopyOrders  DelayedCopyOrder[]
   brokerConnection   BrokerConnection @relation(fields: [brokerConnectionId], references: [id])
   user               User             @relation(fields: [userId], references: [id])
 
@@ -273,15 +274,16 @@ model Guardrail {
 }
 
 model PortfolioSnapshot {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  nav       Decimal
-  positions Json
-  snapshotAt DateTime @default(now()) @map("snapshot_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  nav         Decimal
+  cashBalance Decimal? @map("cash_balance")
+  positions   Json
+  snapshotAt  DateTime @map("snapshot_at")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("portfolio_snapshots")
 }
@@ -289,22 +291,24 @@ model PortfolioSnapshot {
 // New models for additional features
 
 model DelayedCopyOrder {
-  id                String   @id @default(cuid())
-  followerId        String   @map("follower_id")
-  leaderId          String   @map("leader_id")
-  symbol            String
-  side              String
-  quantity          Int
-  originalTradeId   String   @map("original_trade_id")
-  scheduledFor      DateTime @map("scheduled_for")
-  status            String   @default("PENDING")
-  executedAt        DateTime? @map("executed_at")
-  errorMessage      String?  @map("error_message")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id              String    @id @default(cuid())
+  leaderId        String    @map("leader_id")
+  followerId      String    @map("follower_id")
+  originalTradeId String    @map("original_trade_id")
+  symbol          String
+  side            TradeSide
+  quantity        Int
+  status          String    @default("PENDING")
+  scheduledFor    DateTime  @map("scheduled_for")
+  executedAt      DateTime? @map("executed_at")
+  errorMessage    String?   @map("error_message")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  follower          User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
+  leader          User      @relation(fields: [leaderId], references: [id], onDelete: Cascade)
+  follower        User      @relation(fields: [followerId], references: [id], onDelete: Cascade)
+  originalTrade   Trade     @relation(fields: [originalTradeId], references: [id], onDelete: Cascade)
 
   @@map("delayed_copy_orders")
 }
@@ -315,42 +319,40 @@ model SocialPost {
   type      String
   content   String
   metadata  Json?
-  likes     Int      @default(0)
-  comments  Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comments_ Comment[]
-  likes_    Like[]
+  comments  Comment[]
+  likes     Like[]
 
   @@map("social_posts")
 }
 
 model Comment {
   id        String   @id @default(cuid())
-  postId    String   @map("post_id")
   userId    String   @map("user_id")
+  postId    String   @map("post_id")
   content   String
-  likes     Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  likes_    Like[]
+  likes     Like[]
 
   @@map("comments")
 }
 
 model Like {
   id        String   @id @default(cuid())
+  userId    String   @map("user_id")
   postId    String?  @map("post_id")
   commentId String?  @map("comment_id")
-  userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   post      SocialPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -408,15 +410,14 @@ model ApiKey {
   userId      String   @map("user_id")
   name        String
   key         String   @unique
-  permissions Json
-  isActive    Boolean  @default(true) @map("is_active")
+  status      String   @default("ACTIVE")
   lastUsedAt  DateTime? @map("last_used_at")
-  expiresAt   DateTime? @map("expires_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  webhookDeliveries WebhookDelivery[]
 
   @@map("api_keys")
 }
@@ -452,6 +453,7 @@ model WebhookDelivery {
   createdAt    DateTime  @default(now()) @map("created_at")
   deliveredAt  DateTime? @map("delivered_at")
   webhook      Webhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  apiKey       ApiKey?   @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
 
   @@map("webhook_deliveries")
 }
@@ -502,14 +504,14 @@ model RateLimit {
 model AdminAction {
   id          String   @id @default(cuid())
   adminId     String   @map("admin_id")
-  targetId    String   @map("target_id")
-  actionType  String   @map("action_type")
+  targetUserId String  @map("target_user_id")
+  action      String
   details     Json?    @map("details")
   createdAt   DateTime @default(now()) @map("created_at")
 
   // Relations
   admin       User     @relation("AdminActionAdmin", fields: [adminId], references: [id], onDelete: Cascade)
-  target      User     @relation("AdminActionTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  target      User     @relation("AdminActionTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
 
   @@map("admin_actions")
 }
@@ -549,4 +551,11 @@ enum UserRole {
   USER
   ADMIN
   MODERATOR
+}
+
+enum KYCStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  UNDER_REVIEW
 }
