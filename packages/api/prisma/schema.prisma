@@ -1,0 +1,552 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String                  @id @default(cuid())
+  email                  String                  @unique
+  handle               String?                  @unique
+  firstName            String?
+  lastName             String?
+  bio                  String?
+  avatarUrl            String?
+  isVerified           Boolean                 @default(false)
+  mfaEnabled           Boolean                 @default(false)
+  mfaSecret            String?
+  status               String                  @default("ACTIVE")
+  kycStatus            String                  @default("PENDING")
+  subscriptionTier     String                  @default("FREE")
+  createdAt            DateTime                @default(now()) @map("created_at")
+  updatedAt            DateTime                @updatedAt
+  apiKeys              ApiKey[]
+  apiUsage             ApiUsage[]
+  brokerConnections    BrokerConnection[]
+  deviceTokens         DeviceToken[]
+  holdings             Holding[]
+  rateLimits           RateLimit[]
+  thirdPartyIntegrations ThirdPartyIntegration[]
+  trades               Trade[]
+  webhooks             Webhook[]
+  followers            Follower[] @relation("Leader")
+  following            Follower[] @relation("Follower")
+  notificationPreferences NotificationPreference[]
+  auditLogs            AuditLog[]
+  liveSessions         LiveSession[] @relation("Leader")
+  liveSessionViewers   LiveSessionViewer[] @relation("Viewer")
+  tipsSent             Tip[] @relation("Sender")
+  tipsReceived         Tip[] @relation("Receiver")
+  copyOrders           CopyOrder[]
+  guardrails           Guardrail[]
+  portfolioSnapshots   PortfolioSnapshot[]
+  socialPosts          SocialPost[]
+  comments             Comment[]
+  likes                Like[]
+  backtestResults      BacktestResult[] @relation("BacktestUser")
+  backtestResultsAsLeader BacktestResult[] @relation("BacktestLeader")
+  taxExports           TaxExport[]
+  delayedCopyOrders    DelayedCopyOrder[]
+  adminActionsAsAdmin  AdminAction[] @relation("AdminActionAdmin")
+  adminActionsAsTarget AdminAction[] @relation("AdminActionTarget")
+
+  @@map("users")
+}
+
+model BrokerConnection {
+  id                       String    @id @default(cuid())
+  userId                   String    @map("user_id")
+  broker                   String
+  accessToken              String    @map("access_token")
+  refreshToken             String    @map("refresh_token")
+  scope                    String?
+  status                   String    @default("ACTIVE")
+  lastSyncedAt             DateTime? @map("last_synced_at")
+  lastTradePollAt          DateTime? @map("last_trade_poll_at")
+  lastHeartbeatAt          DateTime? @map("last_heartbeat_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+  snaptradeUserId          String?   @map("snaptrade_user_id")
+  snaptradeAuthorizationId String?   @map("snaptrade_authorization_id")
+  user                     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  holdings                 Holding[]
+  trades                   Trade[]
+
+  @@map("broker_connections")
+}
+
+model Holding {
+  id                 String           @id @default(cuid())
+  userId             String           @map("user_id")
+  brokerConnectionId String           @map("broker_connection_id")
+  accountNumber      String           @map("account_number")
+  symbol             String
+  quantity           Decimal
+  marketValue        Decimal          @map("market_value")
+  costBasis          Decimal?         @map("cost_basis")
+  unrealizedPnL      Decimal?         @map("unrealized_pnl")
+  currency           String           @default("USD")
+  updatedAt          DateTime         @default(now()) @updatedAt @map("updated_at")
+  brokerConnection   BrokerConnection @relation(fields: [brokerConnectionId], references: [id])
+  user               User             @relation(fields: [userId], references: [id])
+
+  @@unique([userId, symbol, accountNumber])
+  @@map("holdings")
+}
+
+model Trade {
+  id                 String           @id @default(cuid())
+  userId             String           @map("user_id")
+  brokerConnectionId String           @map("broker_connection_id")
+  accountNumber      String           @map("account_number")
+  symbol             String
+  side               String
+  quantity           Decimal
+  fillPrice          Decimal          @map("fill_price")
+  filledAt           DateTime         @map("filled_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+  copyOrders         CopyOrder[]
+  brokerConnection   BrokerConnection @relation(fields: [brokerConnectionId], references: [id])
+  user               User             @relation(fields: [userId], references: [id])
+
+  @@unique([userId, symbol, filledAt, side, quantity])
+  @@map("trades")
+}
+
+model Follower {
+  id                String   @id @default(cuid())
+  leaderId          String   @map("leader_id")
+  followerId        String   @map("follower_id")
+  autoCopy          Boolean  @default(false) @map("auto_copy")
+  alertOnly         Boolean  @default(true) @map("alert_only")
+  autoCopyPaused    Boolean  @default(false) @map("auto_copy_paused")
+  delayedCopy       Boolean  @default(false) @map("delayed_copy")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  leader            User     @relation("Leader", fields: [leaderId], references: [id], onDelete: Cascade)
+  follower          User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@unique([leaderId, followerId])
+  @@map("followers")
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_tokens")
+}
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@map("notification_preferences")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  action      String
+  resource    String
+  resourceId  String?  @map("resource_id")
+  details     Json?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
+
+model LiveSession {
+  id          String   @id @default(cuid())
+  leaderId    String   @map("leader_id")
+  title       String
+  description String?
+  status      String   @default("ACTIVE")
+  startedAt   DateTime @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+  viewerCount Int      @default(0) @map("viewer_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  leader      User     @relation("Leader", fields: [leaderId], references: [id], onDelete: Cascade)
+  viewers     LiveSessionViewer[]
+
+  @@map("live_sessions")
+}
+
+model LiveSessionViewer {
+  id            String      @id @default(cuid())
+  sessionId     String      @map("session_id")
+  viewerId      String      @map("viewer_id")
+  joinedAt      DateTime    @default(now()) @map("joined_at")
+  leftAt        DateTime?   @map("left_at")
+
+  // Relations
+  session       LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  viewer        User        @relation("Viewer", fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, viewerId])
+  @@map("live_session_viewers")
+}
+
+model Tip {
+  id          String   @id @default(cuid())
+  senderId    String   @map("sender_id")
+  receiverId  String   @map("receiver_id")
+  amount      Decimal
+  message     String?
+  status      String   @default("PENDING")
+  platformFee Decimal? @map("platform_fee")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  sender      User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User     @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("tips")
+}
+
+model CopyOrder {
+  id            String   @id @default(cuid())
+  leaderTradeId String   @map("leader_trade_id")
+  followerId    String   @map("follower_id")
+  symbol        String
+  side          String
+  quantity      Int
+  status        String   @default("QUEUED")
+  filledAt      DateTime? @map("filled_at")
+  errorMessage  String?  @map("error_message")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  leaderTrade   Trade    @relation(fields: [leaderTradeId], references: [id], onDelete: Cascade)
+  follower      User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@map("copy_orders")
+}
+
+model Guardrail {
+  id                String   @id @default(cuid())
+  followerId        String   @map("follower_id")
+  symbol            String?  @map("symbol")
+  maxPct            Decimal? @map("max_pct")
+  maxPositionSize   Decimal  @map("max_position_size")
+  maxDailyLoss      Decimal  @map("max_daily_loss")
+  maxDrawdown       Decimal  @map("max_drawdown")
+  enabled           Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  follower          User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@map("guardrails")
+}
+
+model PortfolioSnapshot {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  nav       Decimal
+  positions Json
+  snapshotAt DateTime @default(now()) @map("snapshot_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_snapshots")
+}
+
+// New models for additional features
+
+model DelayedCopyOrder {
+  id                String   @id @default(cuid())
+  followerId        String   @map("follower_id")
+  leaderId          String   @map("leader_id")
+  symbol            String
+  side              String
+  quantity          Int
+  originalTradeId   String   @map("original_trade_id")
+  scheduledFor      DateTime @map("scheduled_for")
+  status            String   @default("PENDING")
+  executedAt        DateTime? @map("executed_at")
+  errorMessage      String?  @map("error_message")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  follower          User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@map("delayed_copy_orders")
+}
+
+model SocialPost {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String
+  content   String
+  metadata  Json?
+  likes     Int      @default(0)
+  comments  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments_ Comment[]
+  likes_    Like[]
+
+  @@map("social_posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  content   String
+  likes     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes_    Like[]
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String?  @map("post_id")
+  commentId String?  @map("comment_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  post      SocialPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@unique([commentId, userId])
+  @@map("likes")
+}
+
+model BacktestResult {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  leaderId          String   @map("leader_id")
+  startDate         DateTime @map("start_date")
+  endDate           DateTime @map("end_date")
+  initialCapital    Decimal  @map("initial_capital")
+  finalCapital      Decimal  @map("final_capital")
+  totalReturn       Decimal  @map("total_return")
+  totalReturnPercent Decimal @map("total_return_percent")
+  maxDrawdown       Decimal  @map("max_drawdown")
+  sharpeRatio       Decimal  @map("sharpe_ratio")
+  winRate           Decimal  @map("win_rate")
+  totalTrades       Int      @map("total_trades")
+  successfulTrades  Int      @map("successful_trades")
+  failedTrades      Int      @map("failed_trades")
+  equityCurve       Json
+  trades            Json
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user              User     @relation("BacktestUser", fields: [userId], references: [id], onDelete: Cascade)
+  leader            User     @relation("BacktestLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+
+  @@map("backtest_results")
+}
+
+model TaxExport {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  year      Int
+  format    String
+  summary   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tax_exports")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  name        String
+  key         String   @unique
+  permissions Json
+  isActive    Boolean  @default(true) @map("is_active")
+  lastUsedAt  DateTime? @map("last_used_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+model Webhook {
+  id            String            @id @default(cuid())
+  userId        String            @map("user_id")
+  name          String
+  url           String
+  events        String[]
+  isActive      Boolean           @default(true) @map("is_active")
+  secret        String
+  retryCount    Int               @default(0) @map("retry_count")
+  lastTriggered DateTime?         @map("last_triggered")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at")
+  deliveries    WebhookDelivery[]
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id           String    @id @default(cuid())
+  webhookId    String    @map("webhook_id")
+  apiKeyId     String?   @map("api_key_id")
+  eventType    String    @map("event_type")
+  payload      Json
+  status       String
+  responseCode Int?      @map("response_code")
+  responseBody String?   @map("response_body")
+  retryCount   Int       @default(0) @map("retry_count")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deliveredAt  DateTime? @map("delivered_at")
+  webhook      Webhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_deliveries")
+}
+
+model ThirdPartyIntegration {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  provider  String
+  type      String
+  config    Json
+  isActive  Boolean   @default(true) @map("is_active")
+  lastSync  DateTime? @map("last_sync")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("third_party_integrations")
+}
+
+model ApiUsage {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  endpoint     String
+  method       String
+  timestamp    DateTime @default(now())
+  responseTime Int      @map("response_time")
+  statusCode   Int      @map("status_code")
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_usage")
+}
+
+model RateLimit {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  endpoint    String
+  requests    Int      @default(0)
+  windowStart DateTime @map("window_start")
+  windowEnd   DateTime @map("window_end")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint, windowStart])
+  @@map("rate_limits")
+}
+
+model AdminAction {
+  id          String   @id @default(cuid())
+  adminId     String   @map("admin_id")
+  targetId    String   @map("target_id")
+  actionType  String   @map("action_type")
+  details     Json?    @map("details")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  admin       User     @relation("AdminActionAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  target      User     @relation("AdminActionTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@map("admin_actions")
+}
+
+enum WebhookEventType {
+  TRADE_EXECUTED
+  PORTFOLIO_UPDATED
+  COPY_ORDER_PLACED
+  FOLLOWER_ADDED
+  FOLLOWER_REMOVED
+  ALERT_TRIGGERED
+  SESSION_STARTED
+  SESSION_ENDED
+  TIP_RECEIVED
+  API_KEY_CREATED
+  API_KEY_REVOKED
+  WEBHOOK_FAILED
+  RATE_LIMIT_EXCEEDED
+  COMPLIANCE_ALERT
+  SYSTEM_MAINTENANCE
+}
+
+enum TradeSide {
+  BUY
+  SELL
+}
+
+enum CopyOrderStatus {
+  QUEUED
+  EXECUTING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
