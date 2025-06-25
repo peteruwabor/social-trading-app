@@ -1,0 +1,6 @@
+Dockerfile.prod
+docker-compose.prod.yml
+nginx/
+monitoring/
+scripts/
+security/ 
