@@ -21,8 +21,8 @@ export class AuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const authHeader = request.headers.authorization;
+    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
+    const authHeader = request.headers?.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing or invalid authorization header');
@@ -37,7 +37,7 @@ export class AuthGuard implements CanActivate {
     }
     
     // For E2E testing, we'll stub a user object with the provided user ID
-    request.user = {
+    (request as any).user = {
       id: token,
       email: 'demo@gioat.app',
     };
