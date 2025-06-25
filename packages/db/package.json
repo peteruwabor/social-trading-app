@@ -1,0 +1,12 @@
+{
+  "name": "@gioat/db",
+  "version": "1.0.0",
+  "description": "Database migrations and schema for Gioat",
+  "private": true,
+  "scripts": {
+    "migrate": "supabase db reset",
+    "migrate:new": "supabase migration new",
+    "migrate:up": "supabase db push",
+    "migrate:down": "supabase db reset"
+  }
+} 

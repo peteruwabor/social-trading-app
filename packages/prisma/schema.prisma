@@ -1,0 +1,435 @@
+// This is the Prisma schema file for gioat monorepo
+// Data source and generator
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  handle            String?  @unique // Unique alias for leaderboard
+  firstName         String?
+  lastName          String?
+  bio               String?
+  avatarUrl         String?
+  isVerified        Boolean  @default(false)
+  mfaEnabled        Boolean  @default(false)
+  mfaSecret         String?
+  status            UserStatus @default(PENDING)
+  kycStatus         KYCStatus @default(NOT_SUBMITTED)
+  subscriptionTier  SubscriptionTier @default(FREE)
+  subscriptionId    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  brokerConnections BrokerConnection[]
+  followersAsLeader Follower[] @relation("LeaderFollowers")
+  followersAsFollower Follower[] @relation("FollowerLeaders")
+  holdings          Holding[]
+  trades            Trade[]
+  copyOrders        CopyOrder[] @relation("UserCopyOrders")
+  guardrails        Guardrail[]
+  deviceTokens      DeviceToken[]
+  notificationPrefs NotificationPreference[]
+  auditLogs         AuditLog[]
+  liveSessions      LiveSession[]
+  liveSessionViewers LiveSessionViewer[]
+  comments          Comment[]
+  likes             Like[]
+  tips              Tip[] @relation("TipSender")
+  tipsReceived      Tip[] @relation("TipReceiver")
+  adminActions      AdminAction[] @relation("AdminUser")
+  impersonatedBy    AdminAction[] @relation("ImpersonatedUser")
+  portfolioSnapshots PortfolioSnapshot[]
+  apiKeys           APIKey[]
+  webhooks          Webhook[]
+}
+
+model BrokerConnection {
+  id                      String   @id @default(uuid())
+  userId                  String
+  broker                  String
+  accessToken             String
+  refreshToken            String
+  status                  ConnectionStatus @default(ACTIVE)
+  lastSyncedAt            DateTime?
+  lastTradePollAt         DateTime?
+  lastHeartbeatAt         DateTime?
+  snaptradeAuthorizationId String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  // Relations
+  user                    User     @relation(fields: [userId], references: [id])
+  holdings                Holding[]
+  trades                  Trade[]
+}
+
+model Follower {
+  id            String   @id @default(uuid())
+  leaderId      String
+  followerId    String
+  autoCopy      Boolean  @default(false)
+  alertOnly     Boolean  @default(true)
+  autoCopyPaused Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  leader        User     @relation("LeaderFollowers", fields: [leaderId], references: [id])
+  follower      User     @relation("FollowerLeaders", fields: [followerId], references: [id])
+
+  @@unique([leaderId, followerId])
+}
+
+model Holding {
+  id                  String   @id @default(uuid())
+  userId              String
+  brokerConnectionId  String
+  accountNumber       String
+  symbol              String
+  quantity            Int
+  marketValue         Decimal
+  currency            String
+  costBasis           Decimal?  // Average cost basis for the position
+  unrealizedPnL       Decimal?  // Unrealized profit/loss
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  user                User     @relation(fields: [userId], references: [id])
+  brokerConnection    BrokerConnection @relation(fields: [brokerConnectionId], references: [id])
+  
+  @@unique([userId, symbol, accountNumber])
+}
+
+model Trade {
+  id                  String   @id @default(uuid())
+  userId              String
+  brokerConnectionId  String
+  accountNumber       String
+  symbol              String
+  side                TradeSide
+  quantity            Int
+  fillPrice           Decimal
+  filledAt            DateTime
+  createdAt           DateTime @default(now())
+  
+  // Relations
+  user                User     @relation(fields: [userId], references: [id])
+  brokerConnection    BrokerConnection @relation(fields: [brokerConnectionId], references: [id])
+  copyOrders          CopyOrder[]
+}
+
+model CopyOrder {
+  id            String   @id @default(uuid())
+  leaderTradeId String
+  followerId    String
+  symbol        String
+  side          TradeSide
+  quantity      Int
+  status        CopyOrderStatus @default(QUEUED)
+  filledAt      DateTime?
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  leaderTrade   Trade    @relation(fields: [leaderTradeId], references: [id])
+  follower      User     @relation("UserCopyOrders", fields: [followerId], references: [id])
+}
+
+model Guardrail {
+  id         String   @id @default(uuid())
+  followerId String
+  symbol     String?  // null = applies to all symbols
+  maxPct     Decimal  // percent of NAV allowed
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relations
+  follower   User     @relation(fields: [followerId], references: [id])
+  
+  @@index([followerId, symbol])
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  Platform
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model NotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String
+  type      NotificationType
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, type])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String
+  resource    String
+  resourceId  String?
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model LiveSession {
+  id          String   @id @default(uuid())
+  leaderId    String
+  title       String?
+  status      LiveSessionStatus @default(ACTIVE)
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  recordingUrl String?
+  viewerCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  leader      User     @relation(fields: [leaderId], references: [id])
+  viewers     LiveSessionViewer[]
+  comments    Comment[]
+}
+
+model LiveSessionViewer {
+  id            String   @id @default(uuid())
+  sessionId     String
+  viewerId      String
+  joinedAt      DateTime @default(now())
+  leftAt        DateTime?
+  
+  // Relations
+  session       LiveSession @relation(fields: [sessionId], references: [id])
+  viewer        User     @relation(fields: [viewerId], references: [id])
+  
+  @@unique([sessionId, viewerId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  sessionId String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  session   LiveSession @relation(fields: [sessionId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  likes     Like[]
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  commentId String
+  userId    String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([commentId, userId])
+}
+
+model Tip {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  amount      Decimal
+  message     String?
+  platformFee Decimal
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  sender      User     @relation("TipSender", fields: [senderId], references: [id])
+  receiver    User     @relation("TipReceiver", fields: [receiverId], references: [id])
+}
+
+model AdminAction {
+  id            String   @id @default(uuid())
+  adminId       String
+  action        String
+  targetUserId  String?
+  details       Json?
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  admin         User     @relation("AdminUser", fields: [adminId], references: [id])
+  targetUser    User?    @relation("ImpersonatedUser", fields: [targetUserId], references: [id])
+}
+
+model PortfolioSnapshot {
+  id          String   @id @default(uuid())
+  userId      String
+  nav         Decimal  // Net Asset Value at snapshot time
+  cashBalance Decimal? // Cash balance if available
+  positions   Json     // JSON array of positions at snapshot time
+  snapshotAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId, snapshotAt])
+}
+
+model APIKey {
+  id          String   @id @default(uuid())
+  userId      String
+  key         String   @unique
+  name        String?
+  scopes      String[]
+  status      APIKeyStatus @default(ACTIVE)
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  webhookDeliveries WebhookDelivery[]
+}
+
+enum APIKeyStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+model Webhook {
+  id          String   @id @default(uuid())
+  userId      String
+  url         String
+  eventTypes  WebhookEventType[]
+  secret      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  deliveries  WebhookDelivery[]
+}
+
+enum WebhookEventType {
+  TRADE_FILLED
+  COPY_ORDER_FILLED
+  COPY_ORDER_CANCELLED
+  TIP_RECEIVED
+  FOLLOWER_JOINED
+  LIVE_SESSION_STARTED
+  LIVE_SESSION_COMMENT
+  // Add more as needed
+}
+
+model WebhookDelivery {
+  id          String   @id @default(uuid())
+  webhookId   String
+  apiKeyId    String?
+  eventType   WebhookEventType
+  payload     Json
+  status      WebhookDeliveryStatus @default(PENDING)
+  responseCode Int?
+  responseBody String?
+  errorMessage String?
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  webhook     Webhook  @relation(fields: [webhookId], references: [id])
+  apiKey      APIKey?  @relation(fields: [apiKeyId], references: [id])
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// Enums
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum KYCStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  ERROR
+  REVOKED
+}
+
+enum TradeSide {
+  BUY
+  SELL
+}
+
+enum CopyOrderStatus {
+  QUEUED
+  PLACED
+  FILLED
+  FAILED
+  CANCELLED
+}
+
+enum Platform {
+  IOS
+  ANDROID
+  WEB
+}
+
+enum NotificationType {
+  TRADE_ALERT
+  COPY_EXECUTED
+  LIVE_SESSION
+  SYSTEM
+  PROMOTIONAL
+}
+
+enum LiveSessionStatus {
+  ACTIVE
+  ENDED
+  PAUSED
+} 

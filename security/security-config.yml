@@ -1,0 +1,177 @@
+# GIOAT Platform Security Configuration
+
+# Rate Limiting Configuration
+rate_limiting:
+  window_ms: 900000  # 15 minutes
+  max_requests: 100
+  skip_successful_requests: false
+  skip_failed_requests: false
+  
+  # Specific limits for sensitive endpoints
+  endpoints:
+    login:
+      window_ms: 300000  # 5 minutes
+      max_requests: 5
+    password_reset:
+      window_ms: 3600000  # 1 hour
+      max_requests: 3
+    api_key_creation:
+      window_ms: 600000  # 10 minutes
+      max_requests: 10
+
+# CORS Configuration
+cors:
+  origin: 
+    - "https://yourdomain.com"
+    - "https://app.yourdomain.com"
+    - "https://admin.yourdomain.com"
+  credentials: true
+  methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "PATCH"
+  allowed_headers:
+    - "Content-Type"
+    - "Authorization"
+    - "X-API-Key"
+    - "X-Requested-With"
+
+# JWT Configuration
+jwt:
+  secret: "${JWT_SECRET}"
+  expires_in: "24h"
+  refresh_expires_in: "7d"
+  issuer: "gioat-platform"
+  audience: "gioat-users"
+
+# Password Policy
+password_policy:
+  min_length: 12
+  require_uppercase: true
+  require_lowercase: true
+  require_numbers: true
+  require_special_chars: true
+  prevent_common_passwords: true
+  max_age_days: 90
+
+# MFA Configuration
+mfa:
+  enabled: true
+  required_for_admin: true
+  backup_codes_count: 10
+  totp_issuer: "GIOAT Platform"
+
+# API Key Configuration
+api_keys:
+  max_keys_per_user: 5
+  key_length: 32
+  expires_in_days: 365
+  require_scope_restriction: true
+
+# Audit Logging
+audit_logging:
+  enabled: true
+  log_level: "info"
+  sensitive_fields:
+    - "password"
+    - "api_key"
+    - "jwt_token"
+    - "ssn"
+    - "credit_card"
+  
+  events:
+    - "user.login"
+    - "user.logout"
+    - "user.password_change"
+    - "user.mfa_enable"
+    - "user.mfa_disable"
+    - "api_key.create"
+    - "api_key.delete"
+    - "trade.execute"
+    - "copy_order.create"
+    - "copy_order.cancel"
+    - "admin.action"
+
+# Input Validation
+input_validation:
+  max_string_length: 1000
+  max_array_length: 100
+  allowed_file_types:
+    - "image/jpeg"
+    - "image/png"
+    - "image/gif"
+    - "application/pdf"
+  max_file_size_mb: 10
+
+# SQL Injection Prevention
+sql_injection:
+  parameterized_queries: true
+  input_sanitization: true
+  orm_usage: true
+
+# XSS Prevention
+xss_prevention:
+  content_security_policy: true
+  input_sanitization: true
+  output_encoding: true
+
+# CSRF Protection
+csrf_protection:
+  enabled: true
+  token_length: 32
+  expires_in: "1h"
+
+# Session Security
+session_security:
+  secure_cookies: true
+  http_only_cookies: true
+  same_site: "strict"
+  session_timeout: 3600  # 1 hour
+  max_sessions_per_user: 5
+
+# Database Security
+database_security:
+  connection_encryption: true
+  parameterized_queries: true
+  connection_pooling: true
+  max_connections: 100
+  idle_timeout: 30000
+
+# File Upload Security
+file_upload:
+  allowed_extensions:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".gif"
+    - ".pdf"
+  max_size_mb: 10
+  virus_scanning: true
+  storage_encryption: true
+
+# Network Security
+network_security:
+  https_only: true
+  hsts_enabled: true
+  hsts_max_age: 31536000
+  frame_options: "SAMEORIGIN"
+  content_type_options: "nosniff"
+  referrer_policy: "strict-origin-when-cross-origin"
+
+# Monitoring and Alerting
+security_monitoring:
+  failed_login_threshold: 5
+  suspicious_activity_threshold: 10
+  alert_channels:
+    - "email"
+    - "slack"
+    - "webhook"
+  
+  events_to_monitor:
+    - "multiple_failed_logins"
+    - "unusual_api_usage"
+    - "large_trade_orders"
+    - "admin_actions"
+    - "data_export_requests" 

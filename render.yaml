@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gioat-platform
+    env: node
+    buildCommand: npm install -g pnpm && pnpm install && pnpm run build
+    startCommand: cd packages/api && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000 
