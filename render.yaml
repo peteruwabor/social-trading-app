@@ -2,7 +2,7 @@ services:
   - type: web
     name: gioat-platform
     env: node
-    buildCommand: npm install -g pnpm && pnpm install && pnpm run build
+    buildCommand: cd packages/api && npm install && npm run build
     startCommand: cd packages/api && npm start
     healthCheckPath: /health
     envVars:
