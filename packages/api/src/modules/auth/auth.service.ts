@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../lib/prisma.service';
+import { EmailService } from '../../lib/email.service';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
@@ -52,6 +53,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   async signup(signupDto: SignupDto): Promise<AuthResponseDto> {
@@ -87,8 +89,8 @@ export class AuthService {
     // Generate JWT tokens
     const tokens = await this.generateTokens(user.id, user.email);
 
-    // TODO: Send email verification email
-    console.log(`Email verification token for ${email}: ${emailVerificationToken}`);
+    // Send email verification email
+    await this.emailService.sendVerificationEmail(email, name, emailVerificationToken);
 
     return {
       accessToken: tokens.accessToken,
@@ -160,8 +162,8 @@ export class AuthService {
       },
     });
 
-    // TODO: Send password reset email
-    console.log(`Password reset token for ${email}: ${resetToken}`);
+    // Send password reset email
+    await this.emailService.sendPasswordResetEmail(email, user.name || email, resetToken);
 
     return { message: 'Password reset email sent' };
   }
@@ -215,6 +217,9 @@ export class AuthService {
         emailVerificationToken: null,
       },
     });
+
+    // Send welcome email after verification
+    await this.emailService.sendWelcomeEmail(user.email, user.name || user.email);
 
     return { message: 'Email verified successfully' };
   }

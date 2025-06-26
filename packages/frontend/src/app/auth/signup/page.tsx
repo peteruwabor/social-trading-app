@@ -30,8 +30,8 @@ export default function SignupPage() {
         password: formData.password
       })
       
-      // Redirect to dashboard on successful signup
-      window.location.href = '/'
+      // Show success message about email verification
+      alert('Account created successfully! Please check your email to verify your account before logging in.')
     } catch (error: any) {
       console.error('Signup error:', error)
       const errorMessage = error.response?.data?.message || 'Signup failed. Please try again.'

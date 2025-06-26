@@ -12,7 +12,10 @@ import {
   BarChart3,
   PieChart,
   Target,
-  Zap
+  Zap,
+  Mail,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
@@ -21,11 +24,20 @@ import { StatsCard } from '@/components/StatsCard'
 import { TradingChart } from '@/components/TradingChart'
 import { RecentTrades } from '@/components/RecentTrades'
 import { TopTraders } from '@/components/TopTraders'
+import { useAuth } from '@/lib/auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://social-trading-app.onrender.com/api'
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
+  const { user, isAuthenticated } = useAuth()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      window.location.href = '/auth/login'
+    }
+  }, [isAuthenticated, isLoading])
 
   // Simulate loading for smooth animation
   useEffect(() => {
@@ -91,6 +103,40 @@ export default function Dashboard() {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Email Verification Banner */}
+        {user && !user.emailVerified && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-6"
+          >
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <Mail className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-sm font-medium text-amber-800">
+                    Email Verification Required
+                  </h3>
+                  <p className="mt-1 text-sm text-amber-700">
+                    Please check your email and click the verification link to unlock all features.
+                  </p>
+                </div>
+                <div className="ml-4 flex-shrink-0">
+                  <button
+                    className="text-amber-600 hover:text-amber-500 text-sm font-medium underline"
+                    onClick={() => window.location.href = '/auth/resend-verification'}
+                  >
+                    Resend Email
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -100,9 +146,14 @@ export default function Dashboard() {
         >
           <div className="gradient-bg rounded-2xl p-8 text-white relative overflow-hidden">
             <div className="relative z-10">
-              <h1 className="text-4xl font-bold mb-2">Welcome to GIOAT</h1>
+              <h1 className="text-4xl font-bold mb-2">
+                Welcome{user ? ` back, ${user.name?.split(' ')[0] || 'Trader'}` : ' to GIOAT'}! 👋
+              </h1>
               <p className="text-lg opacity-90 mb-6">
-                Your professional social trading platform is now live and ready for action.
+                {user?.emailVerified 
+                  ? "Your account is verified and ready for professional trading."
+                  : "Complete your email verification to unlock all trading features."
+                }
               </p>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -110,6 +161,19 @@ export default function Dashboard() {
                   <span className="text-sm">
                     API Status: {healthData?.status === 'ok' ? 'Online' : 'Checking...'}
                   </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {user?.emailVerified ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <span className="text-sm">Account Verified</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-amber-400" />
+                      <span className="text-sm">Verification Pending</span>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Zap className="w-4 h-4" />
