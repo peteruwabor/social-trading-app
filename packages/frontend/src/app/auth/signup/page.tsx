@@ -14,12 +14,29 @@ export default function SignupPage() {
     confirmPassword: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual registration
-    console.log('Signup attempt:', formData)
-    // For now, redirect to dashboard
-    window.location.href = '/'
+    
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match')
+      return
+    }
+
+    try {
+      const { authApi } = await import('@/lib/auth')
+      await authApi.signup({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      })
+      
+      // Redirect to dashboard on successful signup
+      window.location.href = '/'
+    } catch (error: any) {
+      console.error('Signup error:', error)
+      const errorMessage = error.response?.data?.message || 'Signup failed. Please try again.'
+      alert(errorMessage)
+    }
   }
 
   return (

@@ -12,12 +12,23 @@ export default function LoginPage() {
     password: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual authentication
-    console.log('Login attempt:', formData)
-    // For now, redirect to dashboard
-    window.location.href = '/'
+    
+    try {
+      const { authApi } = await import('@/lib/auth')
+      await authApi.login({
+        email: formData.email,
+        password: formData.password
+      })
+      
+      // Redirect to dashboard on successful login
+      window.location.href = '/'
+    } catch (error: any) {
+      console.error('Login error:', error)
+      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.'
+      alert(errorMessage)
+    }
   }
 
   return (

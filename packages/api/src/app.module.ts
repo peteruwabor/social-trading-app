@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './lib/prisma.service';
 import { EventBus } from './lib/event-bus';
 import { NotificationService } from './lib/notification.service';
 import { AuditLogModule } from './lib/audit-log.module';
+import { AuthGuard } from './lib/auth.guard';
 
 // Core modules
+import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { BrokerConnectionModule } from './broker-connection/broker-connection.module';
 import { TradeCaptureModule } from './trade-capture/trade-capture.module';
@@ -32,8 +35,13 @@ import { LiveSessionModule } from './modules/live-session/live-session.module';
 
 @Module({
   imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-super-secret-key',
+      signOptions: { expiresIn: '24h' },
+    }),
     PrismaModule,
     AuditLogModule,
+    AuthModule,
     UserModule,
     BrokerConnectionModule,
     TradeCaptureModule,
@@ -57,6 +65,6 @@ import { LiveSessionModule } from './modules/live-session/live-session.module';
     // NotificationModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EventBus, NotificationService],
+  providers: [AppService, EventBus, NotificationService, AuthGuard],
 })
 export class AppModule {} 

@@ -10,6 +10,12 @@ datasource db {
 model User {
   id                     String                  @id @default(cuid())
   email                  String                  @unique
+  name                   String?
+  password               String?
+  emailVerified          Boolean                 @default(false) @map("email_verified")
+  emailVerificationToken String?                @map("email_verification_token")
+  passwordResetToken     String?                @map("password_reset_token")
+  passwordResetExpiry    DateTime?              @map("password_reset_expiry")
   handle               String?                  @unique
   firstName            String?
   lastName             String?
