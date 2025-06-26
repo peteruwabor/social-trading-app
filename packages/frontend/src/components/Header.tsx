@@ -11,7 +11,8 @@ import {
   LogOut,
   Menu,
   X,
-  TrendingUp
+  TrendingUp,
+  Link as LinkIcon
 } from 'lucide-react'
 
 export function Header() {
@@ -106,6 +107,13 @@ export function Header() {
                           <User className="w-4 h-4 mr-3" />
                           Your Profile
                         </a>
+                        <Link 
+                          href="/settings/broker-connect"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <LinkIcon className="w-4 h-4 mr-3" />
+                          Broker Connections
+                        </Link>
                         <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                           <Settings className="w-4 h-4 mr-3" />
                           Settings
@@ -173,6 +181,14 @@ export function Header() {
                   {item.name}
                 </a>
               ))}
+              {isAuthenticated && (
+                <Link
+                  href="/settings/broker-connect"
+                  className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                >
+                  Broker Connections
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
