@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { 
   Bell, 
   Search, 
@@ -16,6 +17,7 @@ import {
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false) // TODO: Replace with actual auth state
 
   const navigation = [
     { name: 'Dashboard', href: '/', current: true },
@@ -72,48 +74,68 @@ export function Header() {
               </div>
             </div>
 
-            {/* Notifications */}
-            <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-              <Bell className="h-6 w-6" />
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-            </button>
+            {isAuthenticated ? (
+              <>
+                {/* Notifications */}
+                <button className="p-2 text-gray-400 hover:text-gray-500 relative">
+                  <Bell className="h-6 w-6" />
+                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+                </button>
 
-            {/* Profile dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center space-x-3 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-primary-600" />
+                {/* Profile dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center space-x-3 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  >
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary-600" />
+                    </div>
+                    <span className="hidden md:block text-gray-700 font-medium">John Doe</span>
+                  </button>
+
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                    >
+                      <div className="py-1">
+                        <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <User className="w-4 h-4 mr-3" />
+                          Your Profile
+                        </a>
+                        <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <Settings className="w-4 h-4 mr-3" />
+                          Settings
+                        </a>
+                        <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <LogOut className="w-4 h-4 mr-3" />
+                          Sign out
+                        </a>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-                <span className="hidden md:block text-gray-700 font-medium">John Doe</span>
-              </button>
-
-              {isProfileOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+              </>
+            ) : (
+              /* Authentication buttons for unauthenticated users */
+              <div className="flex items-center space-x-3">
+                <Link 
+                  href="/auth/login" 
+                  className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
                 >
-                  <div className="py-1">
-                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <User className="w-4 h-4 mr-3" />
-                      Your Profile
-                    </a>
-                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <Settings className="w-4 h-4 mr-3" />
-                      Settings
-                    </a>
-                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <LogOut className="w-4 h-4 mr-3" />
-                      Sign out
-                    </a>
-                  </div>
-                </motion.div>
-              )}
-            </div>
+                  Sign In
+                </Link>
+                <Link 
+                  href="/auth/signup" 
+                  className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
 
             {/* Mobile menu button */}
             <button
