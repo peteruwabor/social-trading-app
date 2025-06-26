@@ -1,3 +1,4 @@
+# GIOAT Social Trading Platform - Production Configuration
 services:
   - type: web
     name: gioat-platform
