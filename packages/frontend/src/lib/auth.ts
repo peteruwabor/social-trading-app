@@ -135,14 +135,36 @@ export const authApi = {
   }
 }
 
+// Create axios instance for authenticated API calls
+export const createApiClient = () => {
+  const client = axios.create({
+    baseURL: API_URL
+  })
+
+  // Add token to requests
+  client.interceptors.request.use((config) => {
+    const token = tokenStorage.getAccessToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  })
+
+  return client
+}
+
 // Authentication hook for React components
 export const useAuth = () => {
   const isAuthenticated = authApi.isAuthenticated()
   const user = authApi.getCurrentUser()
+  const token = tokenStorage.getAccessToken()
+  const apiClient = createApiClient()
   
   return {
     isAuthenticated,
     user,
+    token,
+    apiClient,
     login: authApi.login,
     signup: authApi.signup,
     logout: authApi.logout,

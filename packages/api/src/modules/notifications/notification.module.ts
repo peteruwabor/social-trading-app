@@ -1,18 +1,11 @@
 import { Module } from '@nestjs/common';
-import { NotificationPreferencesController } from './notification-preferences.controller';
-import { NotificationService } from '../../lib/notification.service';
-import { FollowerAlertService } from '../../follower-alert/follower-alert.service';
+import { NotificationController } from './notification.controller';
+import { NotificationService } from './notification.service';
 import { PrismaService } from '../../lib/prisma.service';
-import { EventBus } from '../../lib/event-bus';
 
 @Module({
-  controllers: [NotificationPreferencesController],
-  providers: [
-    NotificationService,
-    FollowerAlertService,
-    PrismaService,
-    EventBus,
-  ],
-  exports: [NotificationService, FollowerAlertService],
+  controllers: [NotificationController],
+  providers: [NotificationService, PrismaService],
+  exports: [NotificationService],
 })
 export class NotificationModule {} 

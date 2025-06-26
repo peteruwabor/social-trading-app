@@ -240,17 +240,17 @@ export default function Dashboard() {
           <div className="card">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <a href="/discover" className="flex flex-col items-center p-4 rounded-lg hover:bg-indigo-50 transition-colors border border-indigo-200">
+                <Users className="w-8 h-8 text-indigo-600 mb-2" />
+                <span className="text-sm font-medium text-indigo-700">Discover Traders</span>
+              </a>
+              <a href="/onboarding" className="flex flex-col items-center p-4 rounded-lg hover:bg-green-50 transition-colors border border-green-200">
+                <PieChart className="w-8 h-8 text-green-600 mb-2" />
+                <span className="text-sm font-medium text-green-700">Setup Profile</span>
+              </a>
               <button className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
                 <BarChart3 className="w-8 h-8 text-primary-600 mb-2" />
                 <span className="text-sm font-medium">Analytics</span>
-              </button>
-              <button className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
-                <PieChart className="w-8 h-8 text-primary-600 mb-2" />
-                <span className="text-sm font-medium">Portfolio</span>
-              </button>
-              <button className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
-                <Users className="w-8 h-8 text-primary-600 mb-2" />
-                <span className="text-sm font-medium">Followers</span>
               </button>
               <button className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
                 <Activity className="w-8 h-8 text-primary-600 mb-2" />

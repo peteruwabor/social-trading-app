@@ -27,6 +27,22 @@ model User {
   status               String                  @default("ACTIVE")
   kycStatus            String                  @default("PENDING")
   subscriptionTier     String                  @default("FREE")
+  
+  // Onboarding & Profile
+  onboardingCompleted  Boolean                 @default(false) @map("onboarding_completed")
+  onboardingStep       Int                     @default(0) @map("onboarding_step")
+  tradingExperience    String?                 @map("trading_experience") // BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+  riskTolerance        String?                 @map("risk_tolerance") // CONSERVATIVE, MODERATE, AGGRESSIVE
+  investmentGoals      String[]                @map("investment_goals")
+  preferredMarkets     String[]                @map("preferred_markets")
+  investmentRange      String?                 @map("investment_range")
+  
+  // Trading Stats
+  totalReturn          Decimal?                @map("total_return")
+  winRate              Decimal?                @map("win_rate")
+  sharpeRatio          Decimal?                @map("sharpe_ratio")
+  maxDrawdown          Decimal?                @map("max_drawdown")
+  
   createdAt            DateTime                @default(now()) @map("created_at")
   updatedAt            DateTime                @updatedAt
   apiKeys              ApiKey[]
@@ -58,6 +74,8 @@ model User {
   delayedCopyOrders    DelayedCopyOrder[]
   adminActionsAsAdmin  AdminAction[] @relation("AdminActionAdmin")
   adminActionsAsTarget AdminAction[] @relation("AdminActionTarget")
+  userAchievements     UserAchievement[]
+  notifications        Notification[]
 
   @@map("users")
 }
@@ -555,4 +573,56 @@ enum UserRole {
   USER
   ADMIN
   MODERATOR
+}
+
+model Achievement {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  description     String
+  icon            String
+  category        String    // TRADING, SOCIAL, PERFORMANCE, MILESTONE
+  
+  // Requirements (JSON for flexibility)
+  requirement     Json
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id              String      @id @default(cuid())
+  userId          String      @map("user_id")
+  achievementId   String      @map("achievement_id")
+  
+  progress        Decimal     @default(100) // 0-100%
+  unlockedAt      DateTime    @default(now()) @map("unlocked_at")
+  
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement     Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Notification {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  
+  type            String    // TRADE_EXECUTED, FOLLOWER_GAINED, COPY_TRADE, ACHIEVEMENT_UNLOCKED, etc.
+  title           String
+  message         String
+  data            Json?     // Additional notification data
+  
+  read            Boolean   @default(false)
+  readAt          DateTime? @map("read_at")
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }

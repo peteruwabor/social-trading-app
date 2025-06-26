@@ -10,6 +10,9 @@ import { AuthGuard } from './lib/auth.guard';
 
 // Core modules
 import { AuthModule } from './modules/auth/auth.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { SocialModule } from './modules/social/social.module';
+import { NotificationModule } from './modules/notifications/notification.module';
 import { UserModule } from './modules/user/user.module';
 import { BrokerConnectionModule } from './broker-connection/broker-connection.module';
 import { TradeCaptureModule } from './trade-capture/trade-capture.module';
@@ -42,6 +45,9 @@ import { LiveSessionModule } from './modules/live-session/live-session.module';
     PrismaModule,
     AuditLogModule,
     AuthModule,
+    OnboardingModule,
+    SocialModule,
+    NotificationModule,
     UserModule,
     BrokerConnectionModule,
     TradeCaptureModule,

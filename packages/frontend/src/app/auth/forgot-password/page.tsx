@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { auth } from '../../../lib/auth';
+import { authApi } from '../../../lib/auth';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
     setMessage('');
 
     try {
-      const response = await auth.forgotPassword(email);
+      const response = await authApi.forgotPassword(email);
       setStatus('success');
       setMessage('Password reset email sent! Please check your inbox.');
     } catch (error: any) {
