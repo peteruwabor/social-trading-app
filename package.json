@@ -1,5 +1,5 @@
 {
-  "name": "gioat",
+  "name": "gioat-platform",
   "version": "1.0.0",
   "description": "Gioat monorepo with NestJS API, shared packages, and database migrations",
   "private": true,
@@ -7,16 +7,21 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm --filter api dev",
-    "test": "jest --coverage",
+    "dev": "concurrently \"pnpm --filter @gioat/api dev\" \"pnpm --filter @gioat/frontend dev\"",
+    "test": "pnpm --filter @gioat/tests test",
+    "test:e2e": "pnpm --filter @gioat/tests test:e2e",
     "format": "prettier --write .",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "prisma:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:push": "prisma db push",
-    "start": "cd packages/api && npm install && npm run build && npm start",
-    "build": "cd packages/api && npm install && npm run build",
+    "start": "concurrently \"pnpm --filter @gioat/api start\" \"pnpm --filter @gioat/frontend start\"",
+    "dev:api": "pnpm --filter @gioat/api dev",
+    "dev:frontend": "pnpm --filter @gioat/frontend dev",
+    "build": "pnpm --filter @gioat/api build && pnpm --filter @gioat/frontend build",
+    "build:api": "pnpm --filter @gioat/api build",
+    "build:frontend": "pnpm --filter @gioat/frontend build",
     "vercel-build": "cd packages/api && npm install && npx prisma generate && npm run build"
   },
   "devDependencies": {
@@ -34,7 +39,8 @@
     "prettier": "^3.2.5",
     "prisma": "^5.10.0",
     "ts-jest": "^29.1.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "concurrently": "^8.2.0"
   },
   "engines": {
     "node": ">=18.0.0",
