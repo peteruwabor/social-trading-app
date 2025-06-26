@@ -116,7 +116,7 @@ export function TopTraders() {
             </div>
             
             <div className="text-right">
-              <div className="text-sm font-semibold text-trading-green">
+              <div className="text-sm font-semibold text-green-600">
                 {trader.return}
               </div>
               <div className="text-xs text-gray-500">

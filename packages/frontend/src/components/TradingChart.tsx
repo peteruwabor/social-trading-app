@@ -28,7 +28,7 @@ export function TradingChart() {
             <span className="text-sm text-gray-600">Your Portfolio</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-trading-green rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
             <span className="text-sm text-gray-600">Market Benchmark</span>
           </div>
         </div>
@@ -90,11 +90,11 @@ export function TradingChart() {
       <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
         <div className="text-center">
           <p className="text-sm text-gray-500">Total Return</p>
-          <p className="text-lg font-semibold text-trading-green">+35.0%</p>
+          <p className="text-lg font-semibold text-green-600">+35.0%</p>
         </div>
         <div className="text-center">
           <p className="text-sm text-gray-500">Best Day</p>
-          <p className="text-lg font-semibold text-trading-green">+5.2%</p>
+          <p className="text-lg font-semibold text-green-600">+5.2%</p>
         </div>
         <div className="text-center">
           <p className="text-sm text-gray-500">Volatility</p>

@@ -110,8 +110,8 @@ export function RecentTrades() {
                 <td className="py-4 px-0">
                   <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     trade.side === 'BUY' 
-                      ? 'bg-trading-green-light text-trading-green' 
-                      : 'bg-trading-red-light text-trading-red'
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-red-100 text-red-700'
                   }`}>
                     {trade.side === 'BUY' ? (
                       <ArrowUpRight className="w-3 h-3 mr-1" />
@@ -129,7 +129,7 @@ export function RecentTrades() {
                 </td>
                 <td className="py-4 px-0">
                   <div className={`text-sm font-medium ${
-                    trade.pnl >= 0 ? 'text-trading-green' : 'text-trading-red'
+                    trade.pnl >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
                   </div>

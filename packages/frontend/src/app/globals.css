@@ -32,22 +32,6 @@
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200;
   }
   
-  .trading-green {
-    @apply text-trading-green;
-  }
-  
-  .trading-red {
-    @apply text-trading-red;
-  }
-  
-  .bg-trading-green {
-    @apply bg-trading-green;
-  }
-  
-  .bg-trading-red {
-    @apply bg-trading-red;
-  }
-  
   .gradient-bg {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }

@@ -19,11 +19,11 @@ export function StatsCard({ title, value, change, isPositive, icon: Icon }: Stat
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <div className={`p-2 rounded-lg ${isPositive ? 'bg-trading-green-light' : 'bg-trading-red-light'}`}>
-            <Icon className={`w-6 h-6 ${isPositive ? 'text-trading-green' : 'text-trading-red'}`} />
+          <div className={`p-2 rounded-lg ${isPositive ? 'bg-green-100' : 'bg-red-100'}`}>
+            <Icon className={`w-6 h-6 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
           </div>
         </div>
-        <div className={`flex items-center text-sm font-medium ${isPositive ? 'text-trading-green' : 'text-trading-red'}`}>
+        <div className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
           {isPositive ? (
             <ArrowUpRight className="w-4 h-4 mr-1" />
           ) : (
