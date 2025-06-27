@@ -21,30 +21,26 @@ export interface AuthenticatedRequest extends Request {
 export class AuthGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const authHeader = request.headers.authorization;
+    const authHeader = request.headers['authorization'];
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing or invalid authorization header');
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+    const token = authHeader.split(' ')[1];
+
     try {
-      // Verify JWT token
-      const payload = this.jwtService.verify(token, {
+      const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET || 'your-super-secret-key',
       });
-      
-      // Extract user info from token payload
+
       request.user = {
         id: payload.sub,
         email: payload.email,
       };
-      
+
       return true;
     } catch (error) {
       // Fallback for E2E testing - accept UUID format tokens
@@ -57,7 +53,7 @@ export class AuthGuard implements CanActivate {
         return true;
       }
       
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException('Invalid token');
     }
   }
 } 

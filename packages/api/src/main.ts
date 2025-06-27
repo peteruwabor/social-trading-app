@@ -2,11 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express, { Express, Application } from 'express';
+import express from 'express';
+import type { Express } from 'express';
 
 const server = express();
 
-async function bootstrap(): Promise<Application> {
+async function bootstrap(): Promise<Express> {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   
   app.enableCors({
@@ -31,7 +32,6 @@ async function bootstrap(): Promise<Application> {
   
   await app.init();
   
-  // Return the server instance
   return server;
 }
 

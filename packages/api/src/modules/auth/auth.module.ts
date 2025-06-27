@@ -11,8 +11,11 @@ import { AuthGuard } from '../../lib/auth.guard';
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: process.env.JWT_SECRET || 'your-super-secret-key',
-        signOptions: { 
-          expiresIn: '24h',
+        signOptions: {
+          algorithm: 'HS256',
+        },
+        verifyOptions: {
+          algorithms: ['HS256'],
         },
       }),
     }),
