@@ -14,11 +14,12 @@ import {
   TrendingUp,
   Link as LinkIcon
 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false) // TODO: Replace with actual auth state
+  const { user, isAuthenticated, logout } = useAuth()
 
   const navigation = [
     { name: 'Dashboard', href: '/', current: true },
@@ -27,6 +28,11 @@ export function Header() {
     { name: 'Live Sessions', href: '/live-sessions', current: false },
     { name: 'Analytics', href: '/analytics', current: false },
   ]
+
+  const handleLogout = () => {
+    logout()
+    setIsProfileOpen(false)
+  }
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -92,7 +98,9 @@ export function Header() {
                     <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-primary-600" />
                     </div>
-                    <span className="hidden md:block text-gray-700 font-medium">John Doe</span>
+                    <span className="hidden md:block text-gray-700 font-medium">
+                      {user?.name || 'User'}
+                    </span>
                   </button>
 
                   {isProfileOpen && (
@@ -110,6 +118,7 @@ export function Header() {
                         <Link 
                           href="/settings/broker-connect"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
                         >
                           <LinkIcon className="w-4 h-4 mr-3" />
                           Broker Connections
@@ -118,10 +127,13 @@ export function Header() {
                           <Settings className="w-4 h-4 mr-3" />
                           Settings
                         </a>
-                        <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <button 
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
                           <LogOut className="w-4 h-4 mr-3" />
                           Sign out
-                        </a>
+                        </button>
                       </div>
                     </motion.div>
                   )}
@@ -182,12 +194,24 @@ export function Header() {
                 </a>
               ))}
               {isAuthenticated && (
-                <Link
-                  href="/settings/broker-connect"
-                  className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                >
-                  Broker Connections
-                </Link>
+                <>
+                  <Link
+                    href="/settings/broker-connect"
+                    className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Broker Connections
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setIsMenuOpen(false)
+                    }}
+                    className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block w-full text-left pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                  >
+                    Sign out
+                  </button>
+                </>
               )}
             </div>
           </motion.div>

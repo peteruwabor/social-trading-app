@@ -7,11 +7,13 @@ interface StatsCardProps {
   title: string
   value: string
   change: string
-  isPositive: boolean
+  changeType: 'positive' | 'negative'
   icon: LucideIcon
 }
 
-export function StatsCard({ title, value, change, isPositive, icon: Icon }: StatsCardProps) {
+export function StatsCard({ title, value, change, changeType, icon: Icon }: StatsCardProps) {
+  const isPositive = changeType === 'positive'
+  
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
