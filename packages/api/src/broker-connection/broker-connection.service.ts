@@ -185,13 +185,13 @@ export class BrokerConnectionService {
       data: {
         userId: data.userId,
         broker: data.broker,
-        accountId: data.accountId,
-        accountNumber: data.accountNumber,
-        accountName: data.accountName,
+        accountId: data.accountId ?? null,
+        accountNumber: data.accountNumber ?? null,
+        accountName: data.accountName ?? null,
         status: data.status,
-        authToken: data.authToken,
-        refreshToken: data.refreshToken,
-        metadata: data.metadata,
+        authToken: data.authToken ?? null,
+        refreshToken: data.refreshToken ?? null,
+        metadata: data.metadata ?? null,
       },
     });
   }
