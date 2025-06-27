@@ -34,7 +34,6 @@ import { LiveSessionModule } from './modules/live-session/live-session.module';
 // import { TipModule } from './modules/tip/tip.module';
 // import { WebhookModule } from './modules/webhook/webhook.module';
 // import { AdminActionModule } from './modules/admin/admin-action.module';
-// import { NotificationModule } from './modules/notifications/notification.module';
 
 @Module({
   imports: [
@@ -68,7 +67,6 @@ import { LiveSessionModule } from './modules/live-session/live-session.module';
     // TipModule,
     // WebhookModule,
     // AdminActionModule,
-    // NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, EventBus, NotificationService, AuthGuard],
