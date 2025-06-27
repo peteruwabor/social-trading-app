@@ -13,6 +13,6 @@ import { PrismaService } from '../../lib/prisma.service';
   ],
   controllers: [NotificationController],
   providers: [NotificationService, PrismaService],
-  exports: [NotificationService],
+  exports: [NotificationService, JwtModule],
 })
 export class NotificationModule {} 

@@ -11,6 +11,6 @@ import { PrismaService } from './prisma.service';
     }),
   ],
   providers: [AuditLogService, PrismaService],
-  exports: [AuditLogService],
+  exports: [AuditLogService, JwtModule],
 })
 export class AuditLogModule {} 

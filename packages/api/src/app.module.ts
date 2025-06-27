@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './lib/prisma.service';
 import { EventBus } from './lib/event-bus';
-import { NotificationService } from './lib/notification.service';
 import { AuditLogModule } from './lib/audit-log.module';
 import { AuthGuard } from './lib/auth.guard';
 
@@ -69,6 +68,6 @@ import { LiveSessionModule } from './modules/live-session/live-session.module';
     // AdminActionModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EventBus, NotificationService, AuthGuard],
+  providers: [AppService, EventBus, AuthGuard],
 })
 export class AppModule {} 
