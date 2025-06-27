@@ -5,7 +5,10 @@ import { OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    super();
+    super({
+      log: ['query', 'info', 'warn', 'error'],
+      errorFormat: 'pretty',
+    });
   }
 
   async onModuleInit() {

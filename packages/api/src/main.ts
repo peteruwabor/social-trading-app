@@ -30,6 +30,10 @@ async function bootstrap(): Promise<Express> {
   
   app.setGlobalPrefix('api');
   
+  if (process.env.NODE_ENV !== 'production') {
+    await app.listen(process.env.PORT || 4000);
+  }
+  
   await app.init();
   
   return server;

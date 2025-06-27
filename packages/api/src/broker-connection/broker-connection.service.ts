@@ -6,7 +6,7 @@ import { SnapTradeClient } from '../3rdparty/snaptrade/snaptrade.client';
 import { encryptToken, decryptToken } from '../lib/secrets-vault';
 import { PortfolioSyncService } from '../portfolio-sync/portfolio-sync.service';
 import { SecretsVault } from '../lib/secrets-vault';
-import { Prisma } from '@prisma/client';
+import { Prisma, BrokerConnection } from '@prisma/client';
 
 export interface BrokerConnectionWithHealth {
   id: string;
@@ -41,6 +41,18 @@ export interface BrokerConnectionResponse {
   lastTradePollAt: Date | null;
   lastHeartbeatAt: Date | null;
   snaptradeAuthorizationId: string | null;
+}
+
+interface BrokerConnectionData {
+  userId: string;
+  broker: string;
+  accountId?: string;
+  accountNumber?: string;
+  accountName?: string;
+  status: string;
+  authToken?: string;
+  refreshToken?: string;
+  metadata?: Prisma.JsonValue;
 }
 
 @Injectable()
@@ -168,41 +180,20 @@ export class BrokerConnectionService {
     this.eventBus.publish('connection.revoked', { connectionId });
   }
 
-  async createConnection(dto: BrokerConnectionCreateDto): Promise<BrokerConnectionResponse> {
-    try {
-      // Encrypt tokens before storing
-      const encryptedAccessToken = await this.secretsVault.encrypt(dto.accessToken);
-      const encryptedRefreshToken = await this.secretsVault.encrypt(dto.refreshToken);
-
-      // Create connection with pending status
-      const connection = await this.prisma.brokerConnection.create({
-        data: {
-          userId: dto.userId,
-          broker: dto.broker,
-          accessToken: encryptedAccessToken,
-          refreshToken: encryptedRefreshToken,
-          status: 'PENDING',
-          snaptradeAuthorizationId: dto.snaptradeAuthorizationId || null,
-        },
-      });
-
-      this.logger.debug(`Created broker connection ${connection.id} for user ${dto.userId}`);
-
-      // Publish connection created event
-      this.eventBus.publish('BrokerConnectionCreated', {
-        connectionId: connection.id,
-        userId: dto.userId,
-        broker: dto.broker,
-      });
-
-      // Schedule first sync
-      await this.scheduleFirstSync(connection.id);
-
-      return this.mapToResponse(connection);
-    } catch (error) {
-      this.logger.error('Error creating broker connection:', error);
-      throw error;
-    }
+  async createConnection(data: BrokerConnectionData): Promise<BrokerConnection> {
+    return this.prisma.brokerConnection.create({
+      data: {
+        userId: data.userId,
+        broker: data.broker,
+        accountId: data.accountId,
+        accountNumber: data.accountNumber,
+        accountName: data.accountName,
+        status: data.status,
+        authToken: data.authToken,
+        refreshToken: data.refreshToken,
+        metadata: data.metadata,
+      },
+    });
   }
 
   async getConnections(userId: string): Promise<BrokerConnectionResponse[]> {
