@@ -206,6 +206,55 @@ export class PortfolioService {
   }
 
   /**
+   * Get portfolio performance data
+   * @param userId - The user ID to get performance data for
+   * @returns PortfolioPerformance object with NAV changes over different time periods
+   */
+  async getPortfolioPerformance(userId: string): Promise<PortfolioPerformance> {
+    const cacheKey = this.generatePerformanceCacheKey(userId);
+    
+    // Check cache first
+    const cachedPerformance = this.performanceCache.get(cacheKey);
+    if (cachedPerformance) {
+      return cachedPerformance;
+    }
+
+    try {
+      // Get current portfolio
+      const currentPortfolio = await this.getPortfolio(userId);
+      const currentNav = currentPortfolio.nav;
+
+      // For now, we'll use mock data for historical performance
+      // In a real implementation, this would query portfolio snapshots or historical data
+      const mockHistoricalData = {
+        nav24h: currentNav * 0.985, // 1.5% decrease
+        nav7d: currentNav * 0.92,   // 8% decrease
+        nav30d: currentNav * 0.85,  // 15% decrease
+      };
+
+      const performance: PortfolioPerformance = {
+        currentNav,
+        change24h: currentNav - mockHistoricalData.nav24h,
+        changePercent24h: ((currentNav - mockHistoricalData.nav24h) / mockHistoricalData.nav24h) * 100,
+        change7d: currentNav - mockHistoricalData.nav7d,
+        changePercent7d: ((currentNav - mockHistoricalData.nav7d) / mockHistoricalData.nav7d) * 100,
+        change30d: currentNav - mockHistoricalData.nav30d,
+        changePercent30d: ((currentNav - mockHistoricalData.nav30d) / mockHistoricalData.nav30d) * 100,
+      };
+
+      // Cache the result
+      this.performanceCache.set(cacheKey, performance);
+
+      return performance;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to retrieve portfolio performance for user ${userId}: ${(error as Error).message}`);
+    }
+  }
+
+  /**
    * Clears the portfolio cache (useful for testing or manual cache invalidation)
    */
   clearCache(): void {

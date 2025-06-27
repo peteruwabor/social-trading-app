@@ -98,6 +98,36 @@ export class PortfolioController {
   }
 
   /**
+   * Get portfolio performance data for the authenticated user
+   * @param req - Express request object containing user information
+   * @returns Portfolio performance data with NAV changes over different time periods
+   */
+  @Get('performance')
+  @ApiOperation({
+    summary: 'Get portfolio performance',
+    description: 'Retrieves portfolio performance data including NAV changes over 24h, 7d, and 30d periods',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Portfolio performance data retrieved successfully',
+    type: PortfolioPerformanceDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No portfolio performance data found for the user',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'User not authenticated',
+  })
+  async getPortfolioPerformance(@Request() req: any): Promise<PortfolioPerformanceDto> {
+    const userId = req.user.id;
+    const performance = await this.portfolioService.getPortfolioPerformance(userId);
+    
+    return performance;
+  }
+
+  /**
    * Get multi-account portfolio summary for the authenticated user
    * @param req - Express request object containing user information
    * @returns Multi-account portfolio data grouped by broker and account
