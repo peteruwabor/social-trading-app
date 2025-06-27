@@ -3,11 +3,30 @@ services:
   - type: web
     name: gioat-platform
     env: node
-    buildCommand: cd packages/api && npm ci && NODE_OPTIONS="--max-old-space-size=2048" npm run build
-    startCommand: cd packages/api && npm start
+    buildCommand: >
+      cd packages/api &&
+      npm ci --omit=dev --no-optional &&
+      npm cache clean --force &&
+      NODE_ENV=production NODE_OPTIONS="--max-old-space-size=384" npx prisma generate &&
+      NODE_ENV=production NODE_OPTIONS="--max-old-space-size=384" npm run build:prod
+    startCommand: cd packages/api && NODE_OPTIONS="--max-old-space-size=384" npm run start:prod
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000 
+        value: 4000
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=384"
+      - key: TZ
+        value: UTC
+    disk:
+      name: tmp
+      mountPath: /tmp
+      sizeGB: 0.1
+    autoDeploy: true
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+      targetMemoryPercent: 80
+      targetCPUPercent: 80 
