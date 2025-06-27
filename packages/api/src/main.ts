@@ -2,14 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
+import express, { Express } from 'express';
 
 const server = express();
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
-    logger: ['error', 'warn'],
-  });
+async function bootstrap(): Promise<Express> {
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',
@@ -32,7 +30,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   
   await app.init();
-  return app.getHttpAdapter().getInstance();
+  
+  // Return the Express instance
+  return server;
 }
 
 // For local development
