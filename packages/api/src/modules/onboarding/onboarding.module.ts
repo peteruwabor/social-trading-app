@@ -1,16 +1,11 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from '../auth/auth.module';
 import { OnboardingController } from './onboarding.controller';
 import { OnboardingService } from './onboarding.service';
 import { PrismaService } from '../../lib/prisma.service';
 
 @Module({
-  imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-super-secret-key',
-      signOptions: { expiresIn: '24h' },
-    }),
-  ],
+  imports: [AuthModule],
   controllers: [OnboardingController],
   providers: [OnboardingService, PrismaService],
   exports: [OnboardingService],

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from '../auth/auth.module';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { PrismaService } from '../../lib/prisma.service';
@@ -8,10 +8,7 @@ import { AuditLogService } from '../../lib/audit-log.service';
 
 @Module({
   imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-super-secret-key',
-      signOptions: { expiresIn: '24h' },
-    }),
+    AuthModule,
     AuditLogModule,
   ],
   controllers: [UserController],

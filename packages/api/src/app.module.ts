@@ -68,6 +68,6 @@ import { LiveSessionModule } from './modules/live-session/live-session.module';
     // AdminActionModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EventBus, AuthGuard],
+  providers: [AppService, EventBus],
 })
 export class AppModule {} 
