@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { 
-  Bell, 
   Search, 
   User, 
   Settings, 
@@ -15,6 +14,7 @@ import {
   Link as LinkIcon
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import NotificationBell from './NotificationBell'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -83,11 +83,8 @@ export function Header() {
 
             {isAuthenticated ? (
               <>
-                {/* Notifications */}
-                <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-                  <Bell className="h-6 w-6" />
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-                </button>
+                {/* Enhanced Notifications */}
+                <NotificationBell />
 
                 {/* Profile dropdown */}
                 <div className="relative">
@@ -122,6 +119,14 @@ export function Header() {
                         >
                           <LinkIcon className="w-4 h-4 mr-3" />
                           Broker Connections
+                        </Link>
+                        <Link 
+                          href="/notifications"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Settings className="w-4 h-4 mr-3" />
+                          Notifications
                         </Link>
                         <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                           <Settings className="w-4 h-4 mr-3" />
@@ -198,15 +203,23 @@ export function Header() {
                   <Link
                     href="/settings/broker-connect"
                     className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                    onClick={() => setIsMenuOpen(false)}
                   >
                     Broker Connections
                   </Link>
+                  <Link
+                    href="/notifications"
+                    className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                  >
+                    Notifications
+                  </Link>
+                  <a
+                    href="#"
+                    className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                  >
+                    Settings
+                  </a>
                   <button
-                    onClick={() => {
-                      handleLogout()
-                      setIsMenuOpen(false)
-                    }}
+                    onClick={handleLogout}
                     className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block w-full text-left pl-3 pr-4 py-2 border-l-4 text-base font-medium"
                   >
                     Sign out
