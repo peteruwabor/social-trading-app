@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
-import type { Express } from 'express';
+import type { Express, Request, Response } from 'express';
 
 const server = express();
 
@@ -30,13 +30,18 @@ async function bootstrap(): Promise<Express> {
   
   app.setGlobalPrefix('api');
   
-  if (process.env.NODE_ENV !== 'production') {
-    await app.listen(process.env.PORT || 4000);
-  }
-  
   await app.init();
   
   return server;
+}
+
+let cachedServer: any;
+
+export default async function handler(req: Request, res: Response) {
+  if (!cachedServer) {
+    cachedServer = await bootstrap();
+  }
+  return cachedServer(req, res);
 }
 
 // For local development
@@ -48,6 +53,3 @@ if (process.env.NODE_ENV !== 'production') {
     });
   });
 }
-
-// For Vercel
-export default bootstrap;
