@@ -4,6 +4,10 @@ import { OnModuleDestroy } from '@nestjs/common';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
+  constructor() {
+    super();
+  }
+
   async onModuleDestroy() {
     await this.$disconnect();
   }

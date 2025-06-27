@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from './lib/prisma.service';
 import { AuthGuard, AuthenticatedRequest } from './lib/auth.guard';
 
@@ -53,16 +53,15 @@ export class DemoController {
     }
   }
 
-  @Post('broker-connections')
-  async createBrokerConnection(
-    @Req() req: AuthenticatedRequest,
-    @Body() connectionData: {
-      broker: string;
-      accessToken: string;
-      refreshToken: string;
-      scope?: string;
-    }
+  @Post('connect-broker')
+  async connectBroker(
+    @Body() connectionData: any,
+    @Req() req: AuthenticatedRequest
   ) {
+    if (!req.user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     try {
       const connection = await this.prismaService.brokerConnection.create({
         data: {
@@ -70,37 +69,28 @@ export class DemoController {
           ...connectionData,
         }
       });
-      
-      return {
-        message: 'Broker connection created successfully',
-        connection,
-      };
+      return connection;
     } catch (error) {
-      return {
-        message: 'Failed to create broker connection',
-        error: error instanceof Error ? error.message : String(error),
-      };
+      throw new Error('Failed to connect broker');
     }
   }
 
-  @Get('broker-connections')
-  async getBrokerConnections(@Req() req: AuthenticatedRequest) {
+  @Post('list-connections')
+  async listConnections(@Req() req: AuthenticatedRequest) {
+    if (!req.user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     try {
       const connections = await this.prismaService.brokerConnection.findMany({
         where: {
           userId: req.user.id,
         }
       });
-      
-      return {
-        message: 'Broker connections retrieved successfully',
-        connections,
-      };
+      return connections;
     } catch (error) {
-      return {
-        message: 'Failed to retrieve broker connections',
-        error: error instanceof Error ? error.message : String(error),
-      };
+      throw new Error('Failed to list connections');
     }
   }
+} 
 } 

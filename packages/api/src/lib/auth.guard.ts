@@ -14,7 +14,7 @@ export interface AuthenticatedUser {
 }
 
 export interface AuthenticatedRequest extends Request {
-  user: AuthenticatedUser;
+  user?: AuthenticatedUser;
 }
 
 @Injectable()
@@ -24,8 +24,8 @@ export class AuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
-    const authHeader = request.headers?.authorization;
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing or invalid authorization header');
@@ -40,7 +40,7 @@ export class AuthGuard implements CanActivate {
       });
       
       // Extract user info from token payload
-      (request as any).user = {
+      request.user = {
         id: payload.sub,
         email: payload.email,
       };
@@ -50,7 +50,7 @@ export class AuthGuard implements CanActivate {
       // Fallback for E2E testing - accept UUID format tokens
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(token) || token === 'test-mobile-user-id') {
-        (request as any).user = {
+        request.user = {
           id: token,
           email: 'demo@gioat.app',
         };

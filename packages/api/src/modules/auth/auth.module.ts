@@ -8,9 +8,13 @@ import { AuthGuard } from '../../lib/auth.guard';
 
 @Module({
   imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-super-secret-key',
-      signOptions: { expiresIn: '24h' },
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: process.env.JWT_SECRET || 'your-super-secret-key',
+        signOptions: { 
+          expiresIn: '24h',
+        },
+      }),
     }),
   ],
   controllers: [AuthController],
